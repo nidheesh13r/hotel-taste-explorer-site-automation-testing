@@ -24,15 +24,6 @@
 
       - name: Wait for servers to be ready
         run: npx wait-on http://localhost:5174 http://localhost:5176
-name: Playwright Tests with Xray/Jira Integration
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -50,6 +41,33 @@ jobs:
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+
+      - name: Install Hotels Frontend dependencies
+        run: |
+          cd hotels/react-app
+          npm install
+          cd ../../..
+
+      - name: Start Hotels Frontend
+        run: |
+          cd hotels/react-app
+          nohup npm run dev > ../../../../hotels-frontend.log 2>&1 &
+          cd ../../..
+
+      - name: Install Taste Frontend dependencies
+        run: |
+          cd taste-explorer/react-app
+          npm install
+          cd ../../..
+
+      - name: Start Taste Frontend
+        run: |
+          cd taste-explorer/react-app
+          nohup npm run dev > ../../../../taste-frontend.log 2>&1 &
+          cd ../../..
+
+      - name: Wait for servers to be ready
+        run: npx wait-on http://localhost:5174 http://localhost:5176
 
       - name: Run Playwright tests
         run: npx playwright test --reporter=junit
