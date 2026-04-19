@@ -10,31 +10,14 @@
           nohup python main.py &
           cd ../../
 
-      - name: Start Hotels Frontend
-        run: |
-          cd hotels/react-app
-          nohup npm run dev &
-          cd ../../..
+name: Playwright Tests with Xray/Jira Integration
 
-      - name: Start Taste Frontend
-        run: |
-          cd taste-explorer/react-app
-          nohup npm run dev &
-          cd ../../..
-
-      - name: Wait for servers to be ready
-        run: npx wait-on http://localhost:5174 http://localhost:5176
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
