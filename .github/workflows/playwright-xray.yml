@@ -14,32 +14,48 @@
             - name: Checkout repo
               uses: actions/checkout@v4
 
+            # ---------------- PYTHON DEPS ----------------
+            - name: Install Python dependencies (Hotels)
+              run: |
+                cd hotels/backend
+                pip install -r requirements.txt
+                cd ../../
+
+            - name: Install Python dependencies (Taste)
+              run: |
+                cd taste-explorer/backend
+                pip install -r requirements.txt
+                cd ../../
+
             # ---------------- BACKENDS ----------------
             - name: Start Hotels Backend
               run: |
                 cd hotels/backend
-                nohup python main.py > hotels-backend.log 2>&1 &
+                nohup python main.py > hotels.log 2>&1 &
                 sleep 5
-                cat hotels-backend.log
+                echo "=== Hotels Backend Logs ==="
+                cat hotels.log
                 cd ../../
 
             - name: Start Taste Backend
               run: |
                 cd taste-explorer/backend
-                nohup python main.py > taste-backend.log 2>&1 &
+                nohup python main.py > taste.log 2>&1 &
                 sleep 5
-                cat taste-backend.log
+                echo "=== Taste Backend Logs ==="
+                cat taste.log
                 cd ../../
 
-            - name: Debug backend ports
+            # ---------------- PORTS ----------------
+            - name: Check running ports
               run: |
-                lsof -i :8001 || true
-                lsof -i :8002 || true
+                ss -tuln | grep LISTEN || true
 
-            - name: Curl backend
+            # ---------------- CURL ----------------
+            - name: Test backend endpoints
               run: |
-                curl http://localhost:8001 || true
-                curl http://localhost:8002 || true
+                curl -v http://localhost:8001 || true
+                curl -v http://localhost:8002 || true
 
             # ---------------- NODE SETUP ----------------
             - name: Install dependencies
