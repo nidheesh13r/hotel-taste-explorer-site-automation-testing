@@ -1,5 +1,7 @@
 # Hotels + Taste Explorer
 
+<!-- Triggering GitHub Actions workflow run -->
+
 Independent Hotels and Taste web apps with separate FastAPI backends, separate PostgreSQL databases, a centralized Supabase login page, and API-driven right-side MFE widgets.
 
 ## Workspace Layout
