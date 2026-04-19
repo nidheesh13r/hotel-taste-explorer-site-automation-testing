@@ -1,0 +1,50 @@
+name: Playwright Tests with Xray/Jira Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Playwright tests
+        run: npx playwright test --reporter=junit
+
+      - name: Upload Playwright JUnit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: results.xml
+
+      - name: Import results to Xray/Jira
+        env:
+          XRAY_CLIENT_ID: ${{ secrets.XRAY_CLIENT_ID }}
+          XRAY_CLIENT_SECRET: ${{ secrets.XRAY_CLIENT_SECRET }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+        run: |
+          # Get Xray access token
+          TOKEN=$(curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"client_id": "'$XRAY_CLIENT_ID'", "client_secret": "'$XRAY_CLIENT_SECRET'"}' \
+            https://xray.cloud.getxray.app/api/v2/authenticate | tr -d '"')
+
+          # Import JUnit results to Xray
+          curl -s -X POST \
+            -H "Content-Type: multipart/form-data" \
+            -H "Authorization: Bearer $TOKEN" \
+            -F "file=@results.xml" \
+            "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=$JIRA_PROJECT_KEY"

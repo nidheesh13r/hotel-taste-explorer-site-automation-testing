@@ -1,0 +1,51 @@
+Issue Type,Summary,Description
+Test,TC-AUTH-001 Login page loads with both auth modes,Login page loads with Sign In/Create Account tabs and email/password fields visible
+Test,TC-AUTH-002 Valid sign-in redirects to returnTo target,Valid sign-in redirects user to the specified returnTo URL
+Test,TC-AUTH-003 Sign-up flow creates account and allows continuation,Sign-up flow creates a new account and allows user to continue
+Test,TC-AUTH-004 Invalid login shows user-friendly error,Invalid login attempt displays a user-friendly error message
+Test,TC-AUTH-005 Invalid external returnTo origin is blocked,External returnTo origins are blocked for security
+Test,TC-AUTH-006 Sign in from Hotels /signin returns to Hotels home,Sign in from /signin on Hotels returns to Hotels home
+Test,TC-AUTH-007 Sign in from Taste /signin returns to Taste home,Sign in from /signin on Taste returns to Taste home
+Test,TC-AUTH-008 Logout clears cookies and protected actions require login,Logout clears cookies and protected actions require login
+Test,TC-HOTEL-001 Hotels home loads city list and default destination,Hotels home page loads city list and default destination
+Test,TC-HOTEL-002 City switch refreshes hotel cards,Switching city refreshes hotel cards
+Test,TC-HOTEL-003 Room filter Any applies correctly,Room filter "Any" applies and updates results
+Test,TC-HOTEL-004 Room filter Standard applies correctly,Room filter "Standard" applies and updates results
+Test,TC-HOTEL-005 Room filter Deluxe applies correctly,Room filter "Deluxe" applies and updates results
+Test,TC-HOTEL-006 Room filter Premium applies correctly,Room filter "Premium" applies and updates results
+Test,TC-HOTEL-007 Room filter Suite applies correctly,Room filter "Suite" applies and updates results
+Test,TC-HOTEL-008 Check-out auto-adjusts when date order is invalid,Check-out date auto-adjusts if user selects invalid order
+Test,TC-HOTEL-009 Search click toggles results visibility state,Clicking search toggles hotel results visibility
+Test,TC-HOTEL-010 Book Now opens booking page with query context,Book Now opens booking page with correct query context
+Test,TC-HOTEL-011 Booking summary computes nights correctly,Booking summary correctly computes number of nights
+Test,TC-HOTEL-012 Booking summary computes total correctly,Booking summary correctly computes total price
+Test,TC-HOTEL-013 Booking blocks check-out <= check-in,Booking blocks if check-out date is not after check-in
+Test,TC-HOTEL-014 Booking blocks guests below minimum,Booking blocks if guests are below minimum
+Test,TC-HOTEL-015 Booking blocks guests above capacity,Booking blocks if guests exceed room capacity
+Test,TC-HOTEL-016 Booking blocks invalid government ID format,Booking blocks if government ID format is invalid
+Test,TC-HBOOK-001 Successful booking appears in My Bookings,Successful booking appears in My Bookings page
+Test,TC-HBOOK-002 Active bookings section shows confirmed status,Active bookings section shows confirmed status
+Test,TC-HBOOK-003 Cancel booking changes status to CANCELLED,Cancelling a booking changes its status to CANCELLED
+Test,TC-HBOOK-004 Cancelled section displays cancelled booking card,Cancelled section displays cancelled booking card
+Test,TC-HBOOK-005 Empty state shown when user has no bookings,Empty state is shown when user has no bookings
+Test,TC-HBOOK-006 Guest profile shows sign-in required state,Guest profile page shows sign-in required state
+Test,TC-HBOOK-007 Profile validation rejects invalid email and short phone,Profile validation rejects invalid email and short phone number
+Test,TC-HBOOK-008 Valid profile save shows success confirmation,Valid profile save shows success confirmation
+Test,TC-TASTE-001 Taste home loads city context and hero search area,Taste home loads city context and hero search area
+Test,TC-TASTE-002 Restaurant suggestions appear while typing,Restaurant suggestions appear while typing in search
+Test,TC-TASTE-003 Search with match returns food cards,Search with a match returns food cards
+Test,TC-TASTE-004 Search with no match shows no-result state,Search with no match shows no-result state
+Test,TC-TASTE-005 Add to Library as guest triggers login redirect,Add to Library as guest triggers login redirect
+Test,TC-TASTE-006 Add to Library as signed-in user changes button to Added,Add to Library as signed-in user changes button to "Added"
+Test,TC-TASTE-007 Library page groups items by city,Library page groups items by city
+Test,TC-TASTE-008 Remove from Library deletes visible item,Remove from Library deletes visible item
+Test,TC-TASTE-009 Taste profile for guest shows access gate,Taste profile for guest shows access gate
+Test,TC-TASTE-010 Taste profile save persists valid updates,Taste profile save persists valid updates
+Test,TC-TASTE-011 Hotels widget in Taste respects city switch,Hotels widget in Taste respects city switch
+Test,TC-TASTE-012 Hotels widget room type filter updates visible results,Hotels widget room type filter updates visible results
+Test,TC-INT-001 Taste widget in Hotels refreshes when Hotels city changes,Taste widget in Hotels refreshes when Hotels city changes
+Test,TC-INT-002 Hotels widget in Taste Find Hotels requires valid date range,Hotels widget in Taste Find Hotels requires valid date range
+Test,TC-INT-003 Book Now from Taste passes city dates room params,Book Now from Taste passes city, dates, and room params
+Test,TC-INT-004 Widget empty states shown when API returns no data,Widget empty states are shown when API returns no data
+Test,TC-INT-005 App remains usable when widget API requests fail,App remains usable when widget API requests fail
+Test,TC-INT-006 Hard refresh retains auth session via cookies,Hard refresh retains auth session via cookies
