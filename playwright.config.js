@@ -77,5 +77,5 @@ module.exports = defineConfig({
   // Optional: globalSetup for login/session reuse, seeding, etc.
    globalSetup: require.resolve('./global-setup'),
   // Optional: Xray/Jira mapping (use grep or test annotations in your tests)
-   grep: /@TAHA-/,
+  grep: /TAHA-/,
 });
