@@ -1,4 +1,5 @@
 # Hotels + Taste Explorer
+<!-- Triggering workflow on main branch -->
 
 <!-- Triggering GitHub Actions workflow run -->
 
