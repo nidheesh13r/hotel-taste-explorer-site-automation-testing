@@ -1,6 +1,7 @@
 name: Playwright Tests with Xray/Jira Integration
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master ]
   pull_request:
