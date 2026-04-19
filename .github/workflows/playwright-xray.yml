@@ -90,14 +90,6 @@
                   -H "Authorization: Bearer $TOKEN" \
                   -F "file=@test-results/results.xml" \
                   "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=$JIRA_PROJECT_KEY"
-      - name: Start Hotels Backend
-        run: |
-    name: Playwright Tests with Xray/Jira Integration
-name: Playwright Tests with Xray/Jira Integration
-
-                -F "file=@results.xml" \
-  workflow_dispatch:
-  push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
