@@ -1,3 +1,29 @@
+      - name: Start Hotels Backend
+        run: |
+          cd hotels/backend
+          nohup python main.py &
+          cd ../../
+
+      - name: Start Taste Backend
+        run: |
+          cd taste-explorer/backend
+          nohup python main.py &
+          cd ../../
+
+      - name: Start Hotels Frontend
+        run: |
+          cd hotels/react-app
+          nohup npm run dev &
+          cd ../../..
+
+      - name: Start Taste Frontend
+        run: |
+          cd taste-explorer/react-app
+          nohup npm run dev &
+          cd ../../..
+
+      - name: Wait for servers to be ready
+        run: npx wait-on http://localhost:5174 http://localhost:5176
 name: Playwright Tests with Xray/Jira Integration
 
 on:
