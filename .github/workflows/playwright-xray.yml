@@ -1,147 +1,90 @@
       - name: Start Hotels Backend
         run: |
-          cd hotels/backend
-          nohup python main.py &
-          cd ../../
+    name: Playwright Tests with Xray/Jira Integration
 
-      - name: Start Taste Backend
-        run: |
-          cd taste-explorer/backend
-          nohup python main.py &
-          cd ../../
+    on:
+      workflow_dispatch:
+      push:
+        branches: [ master ]
+      pull_request:
+        branches: [ master ]
 
-name: Playwright Tests with Xray/Jira Integration
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-
-      - name: Install Hotels Frontend dependencies
-        run: |
-          cd hotels/react-app
-          npm install
-          cd ../../..
-
-      - name: Start Hotels Frontend
-        run: |
-          cd hotels/react-app
-          nohup npm run dev > ../../../../hotels-frontend.log 2>&1 &
-          cd ../../..
-
-      - name: Install Taste Frontend dependencies
-        run: |
-          cd taste-explorer/react-app
-          npm install
-          cd ../../..
-
-      - name: Start Taste Frontend
-        run: |
-          cd taste-explorer/react-app
-          nohup npm run dev > ../../../../taste-frontend.log 2>&1 &
-          cd ../../..
-
-      - name: Wait for servers to be ready
-        run: npx wait-on http://localhost:5174 http://localhost:5176
-
-      - name: Run Playwright tests
-        run: npx playwright test --reporter=junit
-
-      - name: Upload Playwright JUnit results
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-results
-          path: results.xml
-
-      name: Playwright Tests with Xray/Jira Integration
-
-      on:
-        workflow_dispatch:
-        push:
-          branches: [ master ]
-        pull_request:
-          branches: [ master ]
-
-      jobs:
-        test:
-          runs-on: ubuntu-latest
-          steps:
-            - name: Start Hotels Backend
-              run: |
-                cd hotels/backend
-                nohup python main.py &
-                cd ../../
-
-            - name: Start Taste Backend
-              run: |
-                cd taste-explorer/backend
-                nohup python main.py &
-                cd ../../
-
-            - name: Install dependencies
-              run: npm install --legacy-peer-deps
-
-            - name: Install Playwright Browsers
-              run: npx playwright install --with-deps
-
-            - name: Install Hotels Frontend dependencies
-              run: |
-                cd hotels/react-app
-                npm install
-                cd ../../..
-
-            - name: Start Hotels Frontend
-              run: |
-                cd hotels/react-app
-                nohup npm run dev > ../../../../hotels-frontend.log 2>&1 &
-                cd ../../..
-
-            - name: Install Taste Frontend dependencies
-              run: |
-                cd taste-explorer/react-app
-                npm install
-                cd ../../..
-
-            - name: Start Taste Frontend
-              run: |
-                cd taste-explorer/react-app
-                nohup npm run dev > ../../../../taste-frontend.log 2>&1 &
-                cd ../../..
-
-            - name: Wait for servers to be ready
-              run: npx wait-on http://localhost:5174 http://localhost:5176
-
-            - name: Run Playwright tests
-              run: npx playwright test --reporter=junit
-
-            - name: Upload Playwright JUnit results
-              uses: actions/upload-artifact@v4
-              with:
-                name: playwright-results
-                path: results.xml
-
-            - name: Import results to Xray/Jira
-              env:
-                XRAY_CLIENT_ID: ${{ secrets.XRAY_CLIENT_ID }}
-                XRAY_CLIENT_SECRET: ${{ secrets.XRAY_CLIENT_SECRET }}
-                JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
-              run: |
-                # Get Xray access token
-                TOKEN=$(curl -s -X POST \
-                  -H "Content-Type: application/json" \
-                  -d '{"client_id": "'$XRAY_CLIENT_ID'", "client_secret": "'$XRAY_CLIENT_SECRET'"}' \
-                  https://xray.cloud.getxray.app/api/v2/authenticate | tr -d '"')
-
-                # Import JUnit results to Xray
                 curl -s -X POST \
+      test:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Start Hotels Backend
+            run: |
+              cd hotels/backend
+              nohup python main.py &
+              cd ../../
+
+          - name: Start Taste Backend
+            run: |
+              cd taste-explorer/backend
+              nohup python main.py &
+              cd ../../
+
+          - name: Install dependencies
+            run: npm install --legacy-peer-deps
+
+          - name: Install Playwright Browsers
+            run: npx playwright install --with-deps
+
+          - name: Install Hotels Frontend dependencies
+            run: |
+              cd hotels/react-app
+              npm install
+              cd ../../..
+
+          - name: Start Hotels Frontend
+            run: |
+              cd hotels/react-app
+              nohup npm run dev > ../../../../hotels-frontend.log 2>&1 &
+              cd ../../..
+
+          - name: Install Taste Frontend dependencies
+            run: |
+              cd taste-explorer/react-app
+              npm install
+              cd ../../..
+
+          - name: Start Taste Frontend
+            run: |
+              cd taste-explorer/react-app
+              nohup npm run dev > ../../../../taste-frontend.log 2>&1 &
+              cd ../../..
+
+          - name: Wait for servers to be ready
+            run: npx wait-on http://localhost:5174 http://localhost:5176
+
+          - name: Run Playwright tests
+            run: npx playwright test --reporter=junit
+
+          - name: Upload Playwright JUnit results
+            uses: actions/upload-artifact@v4
+            with:
+              name: playwright-results
+              path: results.xml
+
+          - name: Import results to Xray/Jira
+            env:
+              XRAY_CLIENT_ID: ${{ secrets.XRAY_CLIENT_ID }}
+              XRAY_CLIENT_SECRET: ${{ secrets.XRAY_CLIENT_SECRET }}
+              JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+            run: |
+              # Get Xray access token
+              TOKEN=$(curl -s -X POST \
+                -H "Content-Type: application/json" \
+                -d '{"client_id": "'$XRAY_CLIENT_ID'", "client_secret": "'$XRAY_CLIENT_SECRET'"}' \
+                https://xray.cloud.getxray.app/api/v2/authenticate | tr -d '"')
+
+              # Import JUnit results to Xray
+              curl -s -X POST \
+                -H "Content-Type: multipart/form-data" \
+                -H "Authorization: Bearer $TOKEN" \
+                -F "file=@results.xml" \
+                "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=$JIRA_PROJECT_KEY"
                   -H "Content-Type: multipart/form-data" \
                   -H "Authorization: Bearer $TOKEN" \
                   -F "file=@results.xml" \
