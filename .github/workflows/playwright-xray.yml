@@ -14,6 +14,11 @@
             - name: Checkout repo
               uses: actions/checkout@v4
 
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: '20'
+
             # ---------------- PYTHON DEPS ----------------
             - name: Install Python dependencies (Hotels)
               run: |
@@ -65,28 +70,28 @@
               run: npx playwright install --with-deps
 
             # ---------------- FRONTENDS ----------------
-            - name: Install Hotels Frontend dependencies
+            - name: Build + Serve Login Frontend
+              run: |
+                cd login/react-app
+                npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+                npm run build
+                nohup npx serve -s dist -l 5173 > ../../../../login-frontend.log 2>&1 &
+                cd ../../..
+
+            - name: Build + Serve Hotels Frontend
               run: |
                 cd hotels/react-app
-                npm install
+                npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+                npm run build
+                nohup npx serve -s dist -l 5174 > ../../../../hotels-frontend.log 2>&1 &
                 cd ../../..
 
-            - name: Start Hotels Frontend
-              run: |
-                cd hotels/react-app
-                nohup npm run dev > ../../../../hotels-frontend.log 2>&1 &
-                cd ../../..
-
-            - name: Install Taste Frontend dependencies
+            - name: Build + Serve Taste Frontend
               run: |
                 cd taste-explorer/react-app
-                npm install
-                cd ../../..
-
-            - name: Start Taste Frontend
-              run: |
-                cd taste-explorer/react-app
-                nohup npm run dev > ../../../../taste-frontend.log 2>&1 &
+                npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+                npm run build
+                nohup npx serve -s dist -l 5176 > ../../../../taste-frontend.log 2>&1 &
                 cd ../../..
 
 
@@ -152,22 +157,25 @@
           npm install
           cd ../../..
 
-      - name: Start Hotels Frontend
+      - name: Build + Serve Hotels Frontend
         run: |
           cd hotels/react-app
-          nohup npm run dev > ../../../../hotels-frontend.log 2>&1 &
+          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+          npm run build
+          nohup npx serve -s dist -l 5174 > ../../../../hotels-frontend.log 2>&1 &
           cd ../../..
-
       - name: Install Taste Frontend dependencies
         run: |
           cd taste-explorer/react-app
           npm install
           cd ../../..
 
-      - name: Start Taste Frontend
+      - name: Build + Serve Taste Frontend
         run: |
           cd taste-explorer/react-app
-          nohup npm run dev > ../../../../taste-frontend.log 2>&1 &
+          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+          npm run build
+          nohup npx serve -s dist -l 5176 > ../../../../taste-frontend.log 2>&1 &
           cd ../../..
 
       # Removed frontend wait-on; frontends are started in background above
