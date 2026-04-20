@@ -1,17 +1,9 @@
-name: Playwright Tests with Xray/Jira Integration
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
 jobs:
   test:
     runs-on: ubuntu-latest
     env:
       NODE_ENV: development
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -20,126 +12,41 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Show Node & npm
-        run: |
-          node -v
-          npm -v
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Build & start all services with Docker Compose
-        run: |
-          docker compose -f docker-compose.full.yml up -d --build
-          docker compose -f docker-compose.full.yml ps
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
 
-      - name: Wait for services to become healthy
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      # 🚀 Build Docker services in parallel
+      - name: Build & start services
+        run: docker compose -f docker-compose.full.yml up -d --build
+
+      - name: Wait for services
         run: |
-          # Wait for backend health endpoints
           for i in $(seq 1 60); do
-            if curl -sSf http://localhost:8005/health >/dev/null 2>&1; then echo "hotels backend healthy"; break; fi
-            echo "waiting for hotels backend (attempt $i)"; sleep 2
+            curl -sSf http://localhost:8005/health && break
+            sleep 2
           done
           for i in $(seq 1 60); do
-            if curl -sSf http://localhost:8002/health >/dev/null 2>&1; then echo "taste backend healthy"; break; fi
-            echo "waiting for taste backend (attempt $i)"; sleep 2
+            curl -sSf http://localhost:8002/health && break
+            sleep 2
           done
 
-          # Wait for frontends to be served from their containers
-          for i in $(seq 1 60); do
-            if curl -sSf http://localhost:5173/ >/dev/null 2>&1; then echo "login frontend up"; break; fi
-            echo "waiting for login frontend (attempt $i)"; sleep 2
-          done
-          for i in $(seq 1 60); do
-            if curl -sSf http://localhost:5174/ >/dev/null 2>&1; then echo "hotels frontend up"; break; fi
-            echo "waiting for hotels frontend (attempt $i)"; sleep 2
-          done
-          for i in $(seq 1 60); do
-            if curl -sSf http://localhost:5176/ >/dev/null 2>&1; then echo "taste frontend up"; break; fi
-            echo "waiting for taste frontend (attempt $i)"; sleep 2
-          done
-
-      - name: Show Docker services and recent logs
-        run: |
-          docker compose -f docker-compose.full.yml ps
-          docker compose -f docker-compose.full.yml logs --tail=200 || true
-      - name: Install dependencies (root)
-        run: |
-          npm ci --include=dev --legacy-peer-deps
-          echo "node: $(node -v)"
-          echo "npm: $(npm -v)"
-          ls -la node_modules || true
-          ls -la node_modules/.bin || true
-          if ! node -e "try{require('@playwright/test'); console.log('found');}catch(e){process.exit(1)}"; then
-            echo "@playwright/test not found, installing"
-            npm i -D @playwright/test@^1.59.1 --legacy-peer-deps
-          fi
-
-      - name: Verify Playwright package
-        run: |
-          node -e "try{console.log('playwright-test-version:', require('@playwright/test/package.json').version);}catch(e){console.error('@playwright/test not installed'); process.exit(0)}"
-
-      - name: Install Playwright Browsers
-        run: |
-          ./node_modules/.bin/playwright install --with-deps
-
-      - name: Build + Serve Login Frontend
-        run: |
-          cd login/react-app
-          npm ci --legacy-peer-deps
-          npm run build
-          cd dist
-          nohup python -m http.server 5173 --bind 0.0.0.0 > $GITHUB_WORKSPACE/login-frontend.log 2>&1 &
-
-      - name: Build + Serve Hotels Frontend
-        run: |
-          cd hotels/react-app
-          npm ci --legacy-peer-deps
-          npm run build
-          cd dist
-          nohup python -m http.server 5174 --bind 0.0.0.0 > $GITHUB_WORKSPACE/hotels-frontend.log 2>&1 &
-
-      - name: Build + Serve Taste Frontend
-        run: |
-          cd taste-explorer/react-app
-          npm ci --legacy-peer-deps
-          npm run build
-          cd dist
-          nohup python -m http.server 5176 --bind 0.0.0.0 > $GITHUB_WORKSPACE/taste-frontend.log 2>&1 &
-
-      - name: Wait for frontends
-        run: |
-          sleep 5
-          curl -v http://localhost:5173 || true
-          curl -v http://localhost:5174 || true
-          curl -v http://localhost:5176 || true
-
-      - name: Debug node_modules bin
-        run: |
-          ls -la node_modules/.bin || true
-          echo $PATH
-
+      # 🚀 Run tests directly (no extra container)
       - name: Run Playwright tests
-        run: |
-          echo "Using node: $(which node)"
-          ./node_modules/.bin/playwright test --reporter=junit
+        run: npx playwright test --reporter=junit
 
-      - name: Upload Playwright JUnit results
+      - name: Upload results
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results
           path: test-results/results.xml
-
-      - name: Import results to Xray/Jira
-        env:
-          XRAY_CLIENT_ID: ${{ secrets.XRAY_CLIENT_ID }}
-          XRAY_CLIENT_SECRET: ${{ secrets.XRAY_CLIENT_SECRET }}
-          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
-        run: |
-          TOKEN=$(curl -s -X POST \
-            -H "Content-Type: application/json" \
-            -d '{"client_id": "'$XRAY_CLIENT_ID'", "client_secret": "'$XRAY_CLIENT_SECRET'"}' \
-            https://xray.cloud.getxray.app/api/v2/authenticate | tr -d '"')
-
-          curl -s -X POST \
-            -H "Authorization: Bearer $TOKEN" \
-            -F "file=@test-results/results.xml" \
-            "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=$JIRA_PROJECT_KEY"
