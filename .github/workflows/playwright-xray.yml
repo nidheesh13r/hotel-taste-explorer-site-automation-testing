@@ -63,11 +63,20 @@
                 curl -v http://localhost:8002 || true
 
             # ---------------- NODE SETUP ----------------
-            - name: Install dependencies
-              run: npm install --legacy-peer-deps
+            - name: Install dependencies (root)
+              run: |
+                npm ci --legacy-peer-deps
+                echo "node: $(node -v)"
+                echo "npm: $(npm -v)"
+                echo "checking @playwright/test..."
+                if ! node -e "try{require('@playwright/test'); console.log('found');}catch(e){process.exit(1)}"; then
+                  echo "@playwright/test not found, installing as devDependency"
+                  npm i -D @playwright/test@^1.59.1 --legacy-peer-deps
+                fi
+                echo "installed dev dependencies"
 
             - name: Install Playwright Browsers
-              run: npx playwright install --with-deps
+              run: ./node_modules/.bin/playwright install --with-deps
 
             # ---------------- FRONTENDS ----------------
             - name: Build + Serve Login Frontend
@@ -100,7 +109,7 @@
 
             # ---------------- TEST ----------------
             - name: Run Playwright tests
-              run: npx playwright test --reporter=junit
+              run: ./node_modules/.bin/playwright test --reporter=junit
 
             # ---------------- ARTIFACT ----------------
             - name: Upload results
@@ -145,11 +154,19 @@
           nohup python -m uvicorn main:app --host 0.0.0.0 --port 8002 &
           cd ../../
 
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
+      - name: Install dependencies (root)
+        run: |
+          npm ci --legacy-peer-deps
+          echo "node: $(node -v)"
+          echo "npm: $(npm -v)"
+          if ! node -e "try{require('@playwright/test'); console.log('found');}catch(e){process.exit(1)}"; then
+            echo "@playwright/test missing, installing devDependency"
+            npm i -D @playwright/test@^1.59.1 --legacy-peer-deps
+          fi
+          echo "installed root dev dependencies"
 
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+        run: ./node_modules/.bin/playwright install --with-deps
 
       - name: Install Hotels Frontend dependencies
         run: |
@@ -181,7 +198,7 @@
       # Removed frontend wait-on; frontends are started in background above
 
       - name: Run Playwright tests
-        run: npx playwright test --reporter=junit
+        run: ./node_modules/.bin/playwright test --reporter=junit
 
       - name: Upload Playwright JUnit results
         uses: actions/upload-artifact@v4
