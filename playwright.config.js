@@ -66,7 +66,7 @@ module.exports = defineConfig({
      {
        name: 'hotels-backend',
        testMatch: /api-hotels.*\.spec\.ts$/,
-       use: { baseURL: process.env.HOTELS_API_URL || 'http://localhost:8001' }
+       use: { baseURL: process.env.HOTELS_API_URL || 'http://localhost:8005' }
      },
      {
        name: 'taste-backend',

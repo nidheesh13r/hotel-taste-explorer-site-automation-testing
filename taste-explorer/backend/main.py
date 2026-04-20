@@ -19,7 +19,7 @@ DB_PORT = int(os.getenv('DB_PORT', '5434'))
 DB_NAME = os.getenv('DB_NAME', 'taste_explorer')
 DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'secret')
-HOTELS_API_URL = os.getenv('HOTELS_API_URL', 'http://localhost:8001')
+HOTELS_API_URL = os.getenv('HOTELS_API_URL', 'http://localhost:8005')
 HOTELS_WEB_URL = os.getenv('HOTELS_WEB_URL', 'http://localhost:5174').rstrip('/')
 
 app = FastAPI(title='Taste BFF')

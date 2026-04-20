@@ -17,7 +17,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:5174',
   'http://localhost:5175',
   'http://localhost:5176',
-  'http://localhost:8001',
+  'http://localhost:8005',
   'http://localhost:8002',
 ];
 const ALLOWED_RETURN_ORIGINS = (import.meta.env.VITE_ALLOWED_RETURN_ORIGINS || '')

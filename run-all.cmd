@@ -3,7 +3,7 @@ setlocal
 
 REM One-shot launcher for full local stack:
 REM - Docker DB containers (hotels + taste)
-REM - Hotels backend (8001)
+REM - Hotels backend (8005)
 REM - Taste backend (8002)
 REM - Hotels frontend (5174)
 REM - Taste frontend (5176)
@@ -21,8 +21,8 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [2/5] Starting Hotels backend on 8001 (Docker DB port 5433)...
-start "Hotels Backend" cmd /k "cd /d "%ROOT%\hotels\backend" && set DB_HOST=127.0.0.1 && set DB_PORT=5433 && set DB_NAME=hotels && set DB_USER=postgres && set DB_PASSWORD=secret && "%PY%" -m uvicorn main:app --host 0.0.0.0 --port 8001"
+echo [2/5] Starting Hotels backend on 8005 (Docker DB port 5433)...
+start "Hotels Backend" cmd /k "cd /d "%ROOT%\hotels\backend" && set DB_HOST=127.0.0.1 && set DB_PORT=5433 && set DB_NAME=hotels && set DB_USER=postgres && set DB_PASSWORD=secret && "%PY%" -m uvicorn main:app --host 0.0.0.0 --port 8005"
 
 echo [3/5] Starting Taste backend on 8002 (Docker DB port 5434)...
 start "Taste Backend" cmd /k "cd /d "%ROOT%\taste-explorer\backend" && set DB_HOST=127.0.0.1 && set DB_PORT=5434 && set DB_NAME=taste_explorer && set DB_USER=postgres && set DB_PASSWORD=secret && "%PY%" -m uvicorn main:app --host 0.0.0.0 --port 8002"
@@ -37,7 +37,7 @@ echo.
 echo All services launched.
 echo Hotels app: http://localhost:5174
 echo Taste app : http://localhost:5176
-echo APIs      : http://localhost:8001/health and http://localhost:8002/health
+echo APIs      : http://localhost:8005/health and http://localhost:8002/health
 echo.
 
 echo Optional: if centralized login is needed, run this in a new CMD:

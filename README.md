@@ -8,7 +8,7 @@ Independent Hotels and Taste web apps with separate FastAPI backends, separate P
 ## Workspace Layout
 
 - `hotels/react-app` - Hotels frontend on port `5174`
-- `hotels/backend` - Hotels FastAPI backend on port `8001`
+- `hotels/backend` - Hotels FastAPI backend on port `8005`
 - `taste-explorer/react-app` - Taste frontend on port `5176`
 - `taste-explorer/backend` - Taste FastAPI backend on port `8002`
 - `login/react-app` - Centralized Supabase login on port `5173`
@@ -73,7 +73,7 @@ Ports:
 
 - Hotels app: `http://localhost:5174`
 - Taste app: `http://localhost:5176`
-- Hotels backend: `http://localhost:8001`
+- Hotels backend: `http://localhost:8005`
 - Taste backend: `http://localhost:8002`
 
 Stop the full stack:
@@ -143,7 +143,7 @@ docker compose -f docker-compose.full.yml up -d --build
 Use [wait-on](https://www.npmjs.com/package/wait-on) to ensure all services are ready before running tests:
 
 ```bash
-npx wait-on http://localhost:8001/health
+npx wait-on http://localhost:8005/health
 npx wait-on http://localhost:8002/health
 npx wait-on http://localhost:5174
 npx wait-on http://localhost:5176
@@ -183,7 +183,7 @@ docker compose -f docker-compose.full.yml up -d --build
 3. **Wait for all services to be healthy:**
 
 ```bash
-npx wait-on http://localhost:8001/health
+npx wait-on http://localhost:8005/health
 npx wait-on http://localhost:8002/health
 npx wait-on http://localhost:5174
 npx wait-on http://localhost:5176
@@ -229,7 +229,7 @@ python setup_taste_db.py
 Open two terminals:
 
 ```bash
-# Hotels backend (port 8001)
+# Hotels backend (port 8005)
 cd hotels/backend
 python main.py
 
@@ -271,7 +271,7 @@ npm run dev -- --host --port 5176
 - Login: http://localhost:5173
 - Hotels: http://localhost:5174
 - Taste Explorer: http://localhost:5176
-- Hotels backend: http://localhost:8001/health
+- Hotels backend: http://localhost:8005/health
 - Taste backend: http://localhost:8002/health
 
 ---

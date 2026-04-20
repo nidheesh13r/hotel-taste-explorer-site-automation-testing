@@ -4,7 +4,7 @@ export const URLS = {
   login: process.env.LOGIN_URL || 'http://localhost:5173',
   hotels: process.env.HOTELS_URL || 'http://localhost:5174',
   taste: process.env.TASTE_URL || 'http://localhost:5176',
-  hotelsApi: process.env.HOTELS_API || 'http://localhost:8001',
+  hotelsApi: process.env.HOTELS_API || 'http://localhost:8005',
   tasteApi: process.env.TASTE_API || 'http://localhost:8002',
 };
 
