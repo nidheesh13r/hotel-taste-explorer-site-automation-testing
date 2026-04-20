@@ -1,210 +1,116 @@
-      name: Playwright Tests with Xray/Jira Integration
+name: Playwright Tests with Xray/Jira Integration
 
-      on:
-        workflow_dispatch:
-        push:
-          branches: [ master ]
-        pull_request:
-          branches: [ master ]
-
-      jobs:
-        test:
-          runs-on: ubuntu-latest
-          steps:
-            - name: Checkout repo
-              uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                node-version: '20'
-
-            # ---------------- PYTHON DEPS ----------------
-            - name: Install Python dependencies (Hotels)
-              run: |
-                cd hotels/backend
-                pip install -r requirements.txt
-                cd ../../
-
-            - name: Install Python dependencies (Taste)
-              run: |
-                cd taste-explorer/backend
-                pip install -r requirements.txt
-                cd ../../
-
-            # ---------------- BACKENDS ----------------
-            - name: Start Hotels Backend
-              run: |
-                cd hotels/backend
-                nohup python -m uvicorn main:app --host 0.0.0.0 --port 8005 > hotels.log 2>&1 &
-                sleep 5
-                echo "=== Hotels Backend Logs ==="
-                cat hotels.log
-                cd ../../
-
-            - name: Start Taste Backend
-              run: |
-                cd taste-explorer/backend
-                nohup python -m uvicorn main:app --host 0.0.0.0 --port 8002 > taste.log 2>&1 &
-                sleep 5
-                echo "=== Taste Backend Logs ==="
-                cat taste.log
-                cd ../../
-
-            # ---------------- PORTS ----------------
-            - name: Check running ports
-              run: |
-                ss -tuln | grep LISTEN || true
-
-            # ---------------- CURL ----------------
-            - name: Test backend endpoints
-              run: |
-                curl -v http://localhost:8005 || true
-                curl -v http://localhost:8002 || true
-
-            # ---------------- NODE SETUP ----------------
-            - name: Install dependencies (root)
-              run: |
-                npm ci --legacy-peer-deps
-                echo "node: $(node -v)"
-                echo "npm: $(npm -v)"
-                echo "checking @playwright/test..."
-                if ! node -e "try{require('@playwright/test'); console.log('found');}catch(e){process.exit(1)}"; then
-                  echo "@playwright/test not found, installing as devDependency"
-                  npm i -D @playwright/test@^1.59.1 --legacy-peer-deps
-                fi
-                echo "installed dev dependencies"
-
-            - name: Install Playwright Browsers
-              run: ./node_modules/.bin/playwright install --with-deps
-
-            # ---------------- FRONTENDS ----------------
-            - name: Build + Serve Login Frontend
-              run: |
-                cd login/react-app
-                npm ci --legacy-peer-deps || npm install --legacy-peer-deps
-                npm run build
-                nohup npx serve -s dist -l 5173 > ../../../../login-frontend.log 2>&1 &
-                cd ../../..
-
-            - name: Build + Serve Hotels Frontend
-              run: |
-                cd hotels/react-app
-                npm ci --legacy-peer-deps || npm install --legacy-peer-deps
-                npm run build
-                nohup npx serve -s dist -l 5174 > ../../../../hotels-frontend.log 2>&1 &
-                cd ../../..
-
-            - name: Build + Serve Taste Frontend
-              run: |
-                cd taste-explorer/react-app
-                npm ci --legacy-peer-deps || npm install --legacy-peer-deps
-                npm run build
-                nohup npx serve -s dist -l 5176 > ../../../../taste-frontend.log 2>&1 &
-                cd ../../..
-
-
-            # ---------------- WAIT ----------------
-            # Removed wait-on steps per local run preference; ensure services are started above.
-
-            # ---------------- TEST ----------------
-            - name: Run Playwright tests
-              run: ./node_modules/.bin/playwright test --reporter=junit
-
-            # ---------------- ARTIFACT ----------------
-            - name: Upload results
-              uses: actions/upload-artifact@v4
-              with:
-                name: playwright-results
-                path: test-results/results.xml
-
-            # ---------------- XRAY ----------------
-            - name: Import results to Xray
-              env:
-                XRAY_CLIENT_ID: ${{ secrets.XRAY_CLIENT_ID }}
-                XRAY_CLIENT_SECRET: ${{ secrets.XRAY_CLIENT_SECRET }}
-                JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
-              run: |
-                TOKEN=$(curl -s -X POST \
-                  -H "Content-Type: application/json" \
-                  -d '{"client_id": "'$XRAY_CLIENT_ID'", "client_secret": "'$XRAY_CLIENT_SECRET'"}' \
-                  https://xray.cloud.getxray.app/api/v2/authenticate | tr -d '"')
-
-                curl -s -X POST \
-                  -H "Authorization: Bearer $TOKEN" \
-                  -F "file=@test-results/results.xml" \
-                  "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=$JIRA_PROJECT_KEY"
+on:
+  workflow_dispatch:
+  push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
 
-                "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=$JIRA_PROJECT_KEY"
+jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Show Node & npm
+        run: |
+          node -v
+          npm -v
+
+      - name: Install Python dependencies
+        run: |
+          python -V
+          pip install -r hotels/backend/requirements.txt
+          pip install -r taste-explorer/backend/requirements.txt
+
       - name: Start Hotels Backend
         run: |
-          cd hotels/backend
-          nohup python -m uvicorn main:app --host 0.0.0.0 --port 8005 &
-          cd ../../
+          (cd hotels/backend && nohup python -m uvicorn main:app --host 0.0.0.0 --port 8005 > $GITHUB_WORKSPACE/hotels.log 2>&1 &)
+          sleep 5
+          echo "=== hotels.log ==="
+          cat $GITHUB_WORKSPACE/hotels.log || true
 
       - name: Start Taste Backend
         run: |
-          cd taste-explorer/backend
-          nohup python -m uvicorn main:app --host 0.0.0.0 --port 8002 &
-          cd ../../
+          (cd taste-explorer/backend && nohup python -m uvicorn main:app --host 0.0.0.0 --port 8002 > $GITHUB_WORKSPACE/taste.log 2>&1 &)
+          sleep 5
+          echo "=== taste.log ==="
+          cat $GITHUB_WORKSPACE/taste.log || true
+
+      - name: Check running ports
+        run: ss -tuln || true
+
+      - name: Test backend endpoints
+        run: |
+          curl -v http://localhost:8005 || true
+          curl -v http://localhost:8002 || true
 
       - name: Install dependencies (root)
         run: |
           npm ci --legacy-peer-deps
           echo "node: $(node -v)"
           echo "npm: $(npm -v)"
+          ls -la node_modules || true
+          ls -la node_modules/.bin || true
           if ! node -e "try{require('@playwright/test'); console.log('found');}catch(e){process.exit(1)}"; then
-            echo "@playwright/test missing, installing devDependency"
+            echo "@playwright/test not found, installing"
             npm i -D @playwright/test@^1.59.1 --legacy-peer-deps
           fi
-          echo "installed root dev dependencies"
 
       - name: Install Playwright Browsers
-        run: ./node_modules/.bin/playwright install --with-deps
+        run: npm exec -- playwright install --with-deps
 
-      - name: Install Hotels Frontend dependencies
+      - name: Build + Serve Login Frontend
         run: |
-          cd hotels/react-app
-          npm install
-          cd ../../..
+          cd login/react-app
+          npm ci --legacy-peer-deps
+          npm run build
+          cd dist
+          nohup python -m http.server 5173 --bind 0.0.0.0 > $GITHUB_WORKSPACE/login-frontend.log 2>&1 &
 
       - name: Build + Serve Hotels Frontend
         run: |
           cd hotels/react-app
-          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+          npm ci --legacy-peer-deps
           npm run build
-          nohup npx serve -s dist -l 5174 > ../../../../hotels-frontend.log 2>&1 &
-          cd ../../..
-      - name: Install Taste Frontend dependencies
-        run: |
-          cd taste-explorer/react-app
-          npm install
-          cd ../../..
+          cd dist
+          nohup python -m http.server 5174 --bind 0.0.0.0 > $GITHUB_WORKSPACE/hotels-frontend.log 2>&1 &
 
       - name: Build + Serve Taste Frontend
         run: |
           cd taste-explorer/react-app
-          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+          npm ci --legacy-peer-deps
           npm run build
-          nohup npx serve -s dist -l 5176 > ../../../../taste-frontend.log 2>&1 &
-          cd ../../..
+          cd dist
+          nohup python -m http.server 5176 --bind 0.0.0.0 > $GITHUB_WORKSPACE/taste-frontend.log 2>&1 &
 
-      # Removed frontend wait-on; frontends are started in background above
+      - name: Wait for frontends
+        run: |
+          sleep 5
+          curl -v http://localhost:5173 || true
+          curl -v http://localhost:5174 || true
+          curl -v http://localhost:5176 || true
+
+      - name: Debug node_modules bin
+        run: |
+          ls -la node_modules/.bin || true
+          echo $PATH
 
       - name: Run Playwright tests
-        run: ./node_modules/.bin/playwright test --reporter=junit
+        run: npm exec -- playwright test --reporter=junit
 
       - name: Upload Playwright JUnit results
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results
-          path: results.xml
+          path: test-results/results.xml
 
       - name: Import results to Xray/Jira
         env:
@@ -212,18 +118,12 @@
           XRAY_CLIENT_SECRET: ${{ secrets.XRAY_CLIENT_SECRET }}
           JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
-          # Get Xray access token
           TOKEN=$(curl -s -X POST \
             -H "Content-Type: application/json" \
             -d '{"client_id": "'$XRAY_CLIENT_ID'", "client_secret": "'$XRAY_CLIENT_SECRET'"}' \
             https://xray.cloud.getxray.app/api/v2/authenticate | tr -d '"')
-          # Import JUnit results to Xray
+
           curl -s -X POST \
-            -H "Content-Type: multipart/form-data" \
             -H "Authorization: Bearer $TOKEN" \
-            -F "file=@results.xml" \
+            -F "file=@test-results/results.xml" \
             "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=$JIRA_PROJECT_KEY"
-                  -H "Content-Type: multipart/form-data" \
-                  -H "Authorization: Bearer $TOKEN" \
-                  -F "file=@results.xml" \
-                  "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=$JIRA_PROJECT_KEY"
