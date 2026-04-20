@@ -10,6 +10,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: development
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -54,7 +56,7 @@ jobs:
 
       - name: Install dependencies (root)
         run: |
-          npm ci --legacy-peer-deps
+          npm ci --include=dev --legacy-peer-deps
           echo "node: $(node -v)"
           echo "npm: $(npm -v)"
           ls -la node_modules || true
