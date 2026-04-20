@@ -31,7 +31,7 @@
             - name: Start Hotels Backend
               run: |
                 cd hotels/backend
-                nohup python main.py > hotels.log 2>&1 &
+                nohup python -m uvicorn main:app --host 0.0.0.0 --port 8005 > hotels.log 2>&1 &
                 sleep 5
                 echo "=== Hotels Backend Logs ==="
                 cat hotels.log
@@ -40,7 +40,7 @@
             - name: Start Taste Backend
               run: |
                 cd taste-explorer/backend
-                nohup python main.py > taste.log 2>&1 &
+                nohup python -m uvicorn main:app --host 0.0.0.0 --port 8002 > taste.log 2>&1 &
                 sleep 5
                 echo "=== Taste Backend Logs ==="
                 cat taste.log
@@ -91,11 +91,7 @@
 
 
             # ---------------- WAIT ----------------
-            - name: Wait for backends
-              run: npx wait-on http://localhost:8005 http://localhost:8002 --timeout 120000
-
-            - name: Wait for frontends
-              run: npx wait-on http://localhost:5174 http://localhost:5176
+            # Removed wait-on steps per local run preference; ensure services are started above.
 
             # ---------------- TEST ----------------
             - name: Run Playwright tests
@@ -135,13 +131,13 @@
       - name: Start Hotels Backend
         run: |
           cd hotels/backend
-          nohup python main.py &
+          nohup python -m uvicorn main:app --host 0.0.0.0 --port 8005 &
           cd ../../
 
       - name: Start Taste Backend
         run: |
           cd taste-explorer/backend
-          nohup python main.py &
+          nohup python -m uvicorn main:app --host 0.0.0.0 --port 8002 &
           cd ../../
 
       - name: Install dependencies
@@ -174,8 +170,7 @@
           nohup npm run dev > ../../../../taste-frontend.log 2>&1 &
           cd ../../..
 
-      - name: Wait for servers to be ready
-        run: npx wait-on http://localhost:5174 http://localhost:5176
+      # Removed frontend wait-on; frontends are started in background above
 
       - name: Run Playwright tests
         run: npx playwright test --reporter=junit
