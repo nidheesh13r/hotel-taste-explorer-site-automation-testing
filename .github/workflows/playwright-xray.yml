@@ -26,34 +26,41 @@ jobs:
           node -v
           npm -v
 
-      - name: Install Python dependencies
+      - name: Build & start all services with Docker Compose
         run: |
-          python -V
-          pip install -r hotels/backend/requirements.txt
-          pip install -r taste-explorer/backend/requirements.txt
+          docker compose -f docker-compose.full.yml up -d --build
+          docker compose -f docker-compose.full.yml ps
 
-      - name: Start Hotels Backend
+      - name: Wait for services to become healthy
         run: |
-          (cd hotels/backend && nohup python -m uvicorn main:app --host 0.0.0.0 --port 8005 > $GITHUB_WORKSPACE/hotels.log 2>&1 &)
-          sleep 5
-          echo "=== hotels.log ==="
-          cat $GITHUB_WORKSPACE/hotels.log || true
+          # Wait for backend health endpoints
+          for i in $(seq 1 60); do
+            if curl -sSf http://localhost:8005/health >/dev/null 2>&1; then echo "hotels backend healthy"; break; fi
+            echo "waiting for hotels backend (attempt $i)"; sleep 2
+          done
+          for i in $(seq 1 60); do
+            if curl -sSf http://localhost:8002/health >/dev/null 2>&1; then echo "taste backend healthy"; break; fi
+            echo "waiting for taste backend (attempt $i)"; sleep 2
+          done
 
-      - name: Start Taste Backend
+          # Wait for frontends to be served from their containers
+          for i in $(seq 1 60); do
+            if curl -sSf http://localhost:5173/ >/dev/null 2>&1; then echo "login frontend up"; break; fi
+            echo "waiting for login frontend (attempt $i)"; sleep 2
+          done
+          for i in $(seq 1 60); do
+            if curl -sSf http://localhost:5174/ >/dev/null 2>&1; then echo "hotels frontend up"; break; fi
+            echo "waiting for hotels frontend (attempt $i)"; sleep 2
+          done
+          for i in $(seq 1 60); do
+            if curl -sSf http://localhost:5176/ >/dev/null 2>&1; then echo "taste frontend up"; break; fi
+            echo "waiting for taste frontend (attempt $i)"; sleep 2
+          done
+
+      - name: Show Docker services and recent logs
         run: |
-          (cd taste-explorer/backend && nohup python -m uvicorn main:app --host 0.0.0.0 --port 8002 > $GITHUB_WORKSPACE/taste.log 2>&1 &)
-          sleep 5
-          echo "=== taste.log ==="
-          cat $GITHUB_WORKSPACE/taste.log || true
-
-      - name: Check running ports
-        run: ss -tuln || true
-
-      - name: Test backend endpoints
-        run: |
-          curl -v http://localhost:8005 || true
-          curl -v http://localhost:8002 || true
-
+          docker compose -f docker-compose.full.yml ps
+          docker compose -f docker-compose.full.yml logs --tail=200 || true
       - name: Install dependencies (root)
         run: |
           npm ci --include=dev --legacy-peer-deps
